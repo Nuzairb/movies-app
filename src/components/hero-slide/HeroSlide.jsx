@@ -31,7 +31,6 @@ const HeroSlide = () => {
         }
         getMovies();
     }, []);
-    
 
     return (
         <div className="hero-slide">
@@ -65,7 +64,7 @@ const HeroSlideItem = props => {
 
     const item = props.item;
 
-    const background = apiConfig.data.originalImage(item.backdrop_path ? item.backdrop_path : item.poster_path);
+    const background = apiConfig.originalImage(item.backdrop_path ? item.backdrop_path : item.poster_path);
 
     const setModalActive = async () => {
         const modal = document.querySelector(`#modal_${item.id}`);
@@ -101,7 +100,7 @@ const HeroSlideItem = props => {
                     </div>
                 </div>
                 <div className="hero-slide__item__content__poster">
-                    <img src={apiConfig.data.w500Image(item.poster_path)} alt="" />
+                    <img src={apiConfig.w500Image(item.poster_path)} alt="" />
                 </div>
             </div>
         </div>
