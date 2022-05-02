@@ -1,22 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useHistory, useParams } from 'react-router';
+
 import './movie-grid.scss';
 
 import MovieCard from '../movie-card/MovieCard';
-import { useParams } from 'react-router';
+import Button, { OutlineButton } from '../button/Button';
+import Input from '../input/Input'
+
 import tmdbApi, { category, movieType, tvType } from '../../api/tmdbApi';
-import { OutlineButton } from '../button/Button';
 
 const MovieGrid = props => {
 
     const [items, setItems] = useState([]);
+
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(0);
 
     const { keyword } = useParams();
+
     useEffect(() => {
         const getList = async () => {
             let response = null;
-
             if (keyword === undefined) {
                 const params = {};
                 switch(props.category) {
@@ -24,7 +28,7 @@ const MovieGrid = props => {
                         response = await tmdbApi.getMoviesList(movieType.upcoming, {params});
                         break;
                     default:
-                        response = await tmdbApi.getMoviesList(tvType.popular, {params});
+                        response = await tmdbApi.getTvList(tvType.popular, {params});
                 }
             } else {
                 const params = {
@@ -49,7 +53,7 @@ const MovieGrid = props => {
                     response = await tmdbApi.getMoviesList(movieType.upcoming, {params});
                     break;
                 default:
-                    response = await tmdbApi.getMoviesList(tvType.popular, {params});
+                    response = await tmdbApi.getTvList(tvType.popular, {params});
             }
         } else {
             const params = {
@@ -59,25 +63,68 @@ const MovieGrid = props => {
             response = await tmdbApi.search(props.category, {params});
         }
         setItems([...items, ...response.results]);
-        setTotalPage(page + 1);
+        setPage(page + 1);
     }
 
     return (
         <>
-            <div className='movie-grid'>
+            <div className="section mb-3">
+                <MovieSearch category={props.category} keyword={keyword}/>
+            </div>
+            <div className="movie-grid">
                 {
-                    items.map((item, i) => <MovieCard category={props.category} item={item} kye={i} />)
+                    items.map((item, i) => <MovieCard category={props.category} item={item} key={i}/>)
                 }
             </div>
             {
                 page < totalPage ? (
                     <div className="movie-grid__loadmore">
-                        <OutlineButton className="small" onClick={loadMore}>Load More</OutlineButton>
+                        <OutlineButton className="small" onClick={loadMore}>Load more</OutlineButton>
                     </div>
                 ) : null
             }
         </>
-        
+    );
+}
+
+const MovieSearch = props => {
+
+    const history = useHistory();
+
+    const [keyword, setKeyword] = useState(props.keyword ? props.keyword : '');
+
+    const goToSearch = useCallback(
+        () => {
+            if (keyword.trim().length > 0) {
+                history.push(`/${category[props.category]}/search/${keyword}`);
+            }
+        },
+        [keyword, props.category, history]
+    );
+
+    useEffect(() => {
+        const enterEvent = (e) => {
+            e.preventDefault();
+            if (e.keyCode === 13) {
+                goToSearch();
+            }
+        }
+        document.addEventListener('keyup', enterEvent);
+        return () => {
+            document.removeEventListener('keyup', enterEvent);
+        };
+    }, [keyword, goToSearch]);
+
+    return (
+        <div className="movie-search">
+            <Input
+                type="text"
+                placeholder="Enter keyword"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+            />
+            <Button className="small" onClick={goToSearch}>Search</Button>
+        </div>
     )
 }
 
